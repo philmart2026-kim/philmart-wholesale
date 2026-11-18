@@ -168,7 +168,7 @@ function show(id){ $('#login').classList.toggle('hidden',id!=='login'); $('#app'
 $('#loginForm').onsubmit=async e=>{ e.preventDefault(); $('#lgErr').textContent=''; $('#lgBtn').disabled=true;
   try{ const r=await rpc('app_login',{p_phone:$('#lgPhone').value,p_pw:$('#lgPw').value});
     if(!r.ok){ $('#lgErr').textContent= r.err==='locked'? '여러 번 틀려서 10분 동안 잠겼어요. 잠시 뒤 다시 해 주세요.' : r.err==='wrong_pw'? '비밀번호가 맞지 않아요.' : '등록된 전화번호가 아니에요. 필마트에 문의해 주세요.'; }
-    else { token=r.token; LS.set('pm-ws-token',token); $('#lgPw').value=''; start(); } }
+    else { token=r.token; LS.set('pm-ws-token',token); $('#lgPw').value=''; await start(); if(r.defaultPw) setTimeout(()=>toast('처음 비밀번호를 쓰고 있어요. 내 정보에서 바꿔 주세요.'),800); } }
   catch(err){ $('#lgErr').textContent='인터넷 연결을 확인해 주세요.'; }
   $('#lgBtn').disabled=false; };
 
