@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Philmart 도매 주문</title>
+<meta name="theme-color" content="#2f6b4f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="필마트 도매">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+:root{--bg:#f4f6f2;--surface:#fff;--ink:#1d2a22;--muted:#6b776f;--line:#dfe5dc;--accent:#2f6b4f;--accent-soft:#e3efe7;--warn:#b5651d;--danger:#c0392b;--r:14px}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Pretendard","Noto Sans KR","Segoe UI",sans-serif;font-size:15px}
+button,input,textarea{font:inherit;color:inherit}
+.hidden{display:none!important}
+header{position:sticky;top:0;z-index:20;background:var(--accent);color:#fff;padding:calc(env(safe-area-inset-top) + 12px) 16px 12px;display:flex;align-items:center;gap:10px}
+header h1{font-size:17px;margin:0;flex:1;font-weight:700}
+header .who{font-size:12.5px;opacity:.9;text-align:right;line-height:1.3}
+.wrap{max-width:720px;margin:0 auto;padding:12px 14px 120px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:10px 14px;font-weight:600;cursor:pointer}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.big{width:100%;padding:14px;font-size:16px}
+.btn:disabled{opacity:.5}
+.in{width:100%;border:1.5px solid var(--line);border-radius:10px;padding:12px;background:var(--surface);font-size:16px}
+.in:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+label.f{display:block;font-size:13px;font-weight:600;color:var(--muted);margin:12px 0 6px}
+.err{color:var(--danger);font-size:13.5px;margin-top:10px;min-height:18px}
+.sub{color:var(--muted);font-size:12.5px}
+/* login */
+#login{min-height:100vh;display:flex;flex-direction:column;justify-content:center;padding:24px}
+#login .logo{width:64px;height:64px;border-radius:18px;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-size:30px;font-weight:800;margin:0 auto 14px}
+#login h2{text-align:center;margin:0 0 4px}
+#login .card{max-width:400px;width:100%;margin:18px auto 0}
+/* tabs */
+.tabs{display:flex;gap:6px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:4px;margin-bottom:12px}
+.tabs button{flex:1;border:0;background:none;padding:9px;border-radius:9px;font-weight:700;color:var(--muted)}
+.tabs button.on{background:var(--accent-soft);color:var(--accent)}
+.search{position:sticky;top:calc(env(safe-area-inset-top) + 56px);z-index:10;background:var(--bg);padding:2px 0 8px}
+.search .in{padding-left:40px;background:var(--surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%236b776f' stroke-width='2.4' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='M20 20l-3.5-3.5'/%3E%3C/svg%3E") no-repeat 13px center}
+.chips{display:flex;gap:6px;overflow-x:auto;padding:8px 0 2px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:0 0 auto;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 12px;font-size:13px;font-weight:600;color:var(--muted)}
+.chip.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.list{display:flex;flex-direction:column;gap:8px}
+.it{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 12px;display:flex;align-items:center;gap:10px}
+.it.in-cart{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset}
+.it .ph{width:52px;height:52px;border-radius:10px;background:var(--accent-soft);flex:0 0 auto;object-fit:cover}
+.it .nm{flex:1;min-width:0}
+.it .nm b{display:block;font-size:14.5px;line-height:1.3;word-break:break-word}
+.it .pr{font-weight:800;color:var(--accent);margin-top:3px}
+.it.out{opacity:.55}
+.badge{display:inline-block;font-size:11px;font-weight:700;padding:2px 7px;border-radius:999px;background:#f2e3d3;color:var(--warn);margin-left:4px}
+.qty{display:flex;align-items:center;gap:0;border:1.5px solid var(--line);border-radius:10px;overflow:hidden;flex:0 0 auto}
+.qty button{width:36px;height:36px;border:0;background:var(--surface);font-size:20px;font-weight:700;color:var(--accent)}
+.qty input{width:44px;height:36px;border:0;text-align:center;font-weight:800;font-size:15px;-moz-appearance:textfield}
+.qty input::-webkit-outer-spin-button,.qty input::-webkit-inner-spin-button{-webkit-appearance:none}
+.add{border:0;background:var(--accent);color:#fff;font-weight:700;border-radius:10px;padding:9px 14px}
+.more{display:block;margin:12px auto 0}
+/* cart bar */
+.bar{position:fixed;left:0;right:0;bottom:0;z-index:30;padding:10px 14px calc(env(safe-area-inset-bottom) + 10px);background:linear-gradient(transparent,var(--bg) 30%)}
+.bar button{max-width:692px;margin:0 auto;display:flex;width:100%;align-items:center;gap:10px;border:0;background:var(--accent);color:#fff;border-radius:14px;padding:14px 16px;font-size:16px;font-weight:800;box-shadow:0 6px 18px rgba(0,0,0,.18)}
+.bar .n{background:#fff;color:var(--accent);border-radius:999px;min-width:26px;height:26px;display:inline-flex;align-items:center;justify-content:center;font-size:13px;padding:0 6px}
+.bar .t{margin-left:auto}
+/* sheet */
+.sheet{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.35);display:flex;align-items:flex-end;justify-content:center}
+.sheet .box{background:var(--bg);width:100%;max-width:720px;max-height:88vh;border-radius:18px 18px 0 0;display:flex;flex-direction:column}
+.sheet .hd{display:flex;align-items:center;padding:14px 16px;border-bottom:1px solid var(--line);font-weight:800;font-size:16px}
+.sheet .hd button{margin-left:auto;border:0;background:none;font-size:22px;color:var(--muted)}
+.sheet .bd{overflow:auto;padding:12px 14px}
+.sheet .ft{padding:12px 14px calc(env(safe-area-inset-bottom) + 12px);border-top:1px solid var(--line);background:var(--surface)}
+.row{display:flex;align-items:center;gap:8px}
+.sum{display:flex;justify-content:space-between;font-weight:800;font-size:17px;margin-bottom:10px}
+/* orders */
+.ord{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:8px}
+.ord .top{display:flex;align-items:center;gap:8px}
+.st{font-size:12px;font-weight:700;padding:3px 8px;border-radius:999px}
+.st.new{background:#fff3d6;color:#9a6a00}.st.imported{background:var(--accent-soft);color:var(--accent)}.st.canceled{background:#eee;color:#888}
+.ord ul{margin:8px 0 0;padding-left:18px;font-size:13.5px;color:var(--ink)}
+.bal{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.bal b{font-size:20px}
+.toast{position:fixed;left:50%;bottom:96px;transform:translateX(-50%);background:#1d2a22;color:#fff;padding:10px 16px;border-radius:999px;font-size:14px;z-index:60;max-width:90vw;text-align:center}
+.empty{text-align:center;color:var(--muted);padding:30px 10px}
+</style>
+</head>
+<body>
+
+<section id="login" class="hidden">
+  <div class="logo">P</div>
+  <h2>필마트 도매 주문</h2>
+  <div class="sub" style="text-align:center">Philmart Wholesale Order</div>
+  <form class="card" id="loginForm" autocomplete="on">
+    <label class="f" for="lgPhone">전화번호 · Phone</label>
+    <input class="in" id="lgPhone" type="tel" inputmode="numeric" autocomplete="username" placeholder="010-0000-0000" required>
+    <label class="f" for="lgPw">비밀번호 · Password</label>
+    <input class="in" id="lgPw" type="password" autocomplete="current-password" required>
+    <div class="err" id="lgErr"></div>
+    <button class="btn pri big" id="lgBtn" type="submit">로그인 · Log in</button>
+    <p class="sub" style="text-align:center;margin:14px 0 0">계정이 없거나 비밀번호를 잊었으면 필마트에 문의해 주세요.</p>
+  </form>
+</section>
+
+<section id="app" class="hidden">
+  <header><h1>필마트 도매 주문</h1><div class="who" id="who"></div></header>
+  <div class="wrap">
+    <div class="tabs" role="tablist">
+      <button class="on" data-tab="shop" role="tab">상품</button>
+      <button data-tab="orders" role="tab">주문 내역</button>
+      <button data-tab="me" role="tab">내 정보</button>
+    </div>
+
+    <div id="tab-shop">
+      <div class="search"><input class="in" id="q" type="search" placeholder="상품 검색 · Search"><div class="chips" id="chips"></div></div>
+      <div class="list" id="items"></div>
+      <button class="btn more hidden" id="more">더 보기 · More</button>
+    </div>
+
+    <div id="tab-orders" class="hidden">
+      <div class="card bal"><span>현재 미수금 · Balance</span><b id="balance">–</b></div>
+      <div id="orders"></div>
+    </div>
+
+    <div id="tab-me" class="hidden">
+      <div class="card" id="meInfo"></div>
+      <form class="card" id="pwForm" style="margin-top:10px">
+        <b>비밀번호 바꾸기</b>
+        <label class="f">지금 비밀번호</label><input class="in" type="password" id="pwOld" autocomplete="current-password" required>
+        <label class="f">새 비밀번호 (4자 이상)</label><input class="in" type="password" id="pwNew" autocomplete="new-password" minlength="4" required>
+        <div class="err" id="pwErr"></div>
+        <button class="btn pri big" type="submit">바꾸기</button>
+      </form>
+      <button class="btn big" id="logout" style="margin-top:10px">로그아웃 · Log out</button>
+    </div>
+  </div>
+  <div class="bar hidden" id="bar"><button id="openCart"><span class="n" id="barN">0</span> 장바구니 보기 · Cart <span class="t" id="barT">0원</span></button></div>
+</section>
+
+<div class="sheet hidden" id="cart">
+  <div class="box">
+    <div class="hd">장바구니 · Cart<button id="closeCart" aria-label="닫기">✕</button></div>
+    <div class="bd"><div class="list" id="cartList"></div>
+      <label class="f" for="memo">요청 사항 · Note</label><textarea class="in" id="memo" rows="2" placeholder="배송일, 요청 사항 등"></textarea></div>
+    <div class="ft"><div class="sum"><span>합계 · Total</span><span id="cartT">0원</span></div>
+      <div class="sub" style="margin:-4px 0 10px">가격은 주문 시점 기준이며, 재고에 따라 수량이 조정될 수 있어요.</div>
+      <button class="btn pri big" id="send">주문 보내기 · Place order</button></div>
+  </div>
+</div>
+
+<script>
+const SUPA='https://pebygdhmzxhoxooddcjz.supabase.co', KEY='sb_publishable_NhUf1QKCMxH81wGqOf2AMg_0ATjywjK';
+const $=s=>document.querySelector(s), won=n=>(Math.round(Number(n)||0)).toLocaleString('ko-KR')+'원';
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const LS={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}},del(k){try{localStorage.removeItem(k)}catch(e){}}};
+let token=LS.get('pm-ws-token'), me=null, items=[], cart={}, cat='', limit=60;
+try{ cart=JSON.parse(LS.get('pm-ws-cart')||'{}')||{}; }catch(e){ cart={}; }
+const toast=t=>{ const d=document.createElement('div'); d.className='toast'; d.textContent=t; document.body.appendChild(d); setTimeout(()=>d.remove(),2600); };
+
+async function rpc(fn,args){
+  const r=await fetch(`${SUPA}/rest/v1/rpc/${fn}`,{method:'POST',headers:{'apikey':KEY,'Authorization':'Bearer '+KEY,'Content-Type':'application/json'},body:JSON.stringify(args||{})});
+  if(!r.ok) throw new Error('net '+r.status); return r.json(); }
+
+function show(id){ $('#login').classList.toggle('hidden',id!=='login'); $('#app').classList.toggle('hidden',id!=='app'); }
+
+$('#loginForm').onsubmit=async e=>{ e.preventDefault(); $('#lgErr').textContent=''; $('#lgBtn').disabled=true;
+  try{ const r=await rpc('app_login',{p_phone:$('#lgPhone').value,p_pw:$('#lgPw').value});
+    if(!r.ok){ $('#lgErr').textContent= r.err==='locked'? '여러 번 틀려서 10분 동안 잠겼어요. 잠시 뒤 다시 해 주세요.' : r.err==='wrong_pw'? '비밀번호가 맞지 않아요.' : '등록된 전화번호가 아니에요. 필마트에 문의해 주세요.'; }
+    else { token=r.token; LS.set('pm-ws-token',token); $('#lgPw').value=''; start(); } }
+  catch(err){ $('#lgErr').textContent='인터넷 연결을 확인해 주세요.'; }
+  $('#lgBtn').disabled=false; };
+
+async function start(){
+  if(!token){ show('login'); return; }
+  try{ const m=await rpc('app_me',{p_token:token}); if(!m.ok){ token=null; LS.del('pm-ws-token'); show('login'); return; } me=m; }
+  catch(e){ show('login'); $('#lgErr').textContent='인터넷 연결을 확인해 주세요.'; return; }
+  show('app'); $('#who').innerHTML=`${esc(me.name)}<br>${esc(me.cls)} 단가`;
+  $('#meInfo').innerHTML=`<b style="font-size:17px">${esc(me.name)}</b><div class="sub" style="margin-top:6px">${esc(me.phone||'')}${me.address?'<br>'+esc(me.address):''}</div><div class="sub" style="margin-top:6px">${esc(me.cls)} class 도매가 적용</div>`;
+  await loadItems(); }
+
+async function loadItems(){
+  $('#items').innerHTML='<div class="empty">불러오는 중…</div>';
+  try{ const r=await rpc('app_catalog',{p_token:token}); if(!r.ok){ logout(); return; } items=r.items||[]; }
+  catch(e){ $('#items').innerHTML='<div class="empty">상품을 불러오지 못했어요. 다시 열어 주세요.</div>'; return; }
+  // 장바구니에서 사라진·품절 상품 정리
+  const byId=new Map(items.map(i=>[i.id,i])); Object.keys(cart).forEach(k=>{ const i=byId.get(k); if(!i||i.soldout) delete cart[k]; }); saveCart();
+  const cats=[...new Set(items.map(i=>i.cat).filter(Boolean))].sort();
+  $('#chips').innerHTML=['', ...cats].map(c=>`<button class="chip${c===cat?' on':''}" data-c="${esc(c)}">${c?esc(c):'전체 · All'}</button>`).join('');
+  $('#chips').querySelectorAll('.chip').forEach(b=>b.onclick=()=>{ cat=b.dataset.c; limit=60; $('#chips').querySelectorAll('.chip').forEach(x=>x.classList.toggle('on',x===b)); renderItems(); });
+  $('#chips').classList.toggle('hidden',!cats.length);
+  renderItems(); }
+
+const norm=s=>String(s||'').toLowerCase().replace(/\s+/g,' ').trim();
+function filtered(){ const tk=norm($('#q').value).split(' ').filter(Boolean);
+  return items.filter(i=>(!cat||i.cat===cat) && tk.every(w=>norm(i.name+' '+(i.spec||'')).includes(w))); }
+function qtyHTML(id,q){ return `<div class="qty"><button data-m="${esc(id)}" aria-label="빼기">−</button><input type="number" inputmode="numeric" min="0" value="${q}" data-q="${esc(id)}" aria-label="수량"><button data-p="${esc(id)}" aria-label="더하기">+</button></div>`; }
+function itemHTML(i){ const q=cart[i.id]||0;
+  return `<div class="it${q?' in-cart':''}${i.soldout?' out':''}">${i.photo?`<img class="ph" src="${esc(i.photo)}" alt="" loading="lazy">`:''}
+    <div class="nm"><b>${esc(i.name)}${i.spec?` <span class="sub">${esc(i.spec)}</span>`:''}${i.soldout?'<span class="badge">품절 · Sold out</span>':''}</b><div class="pr">${won(i.price)}</div></div>
+    ${i.soldout? '' : q? qtyHTML(i.id,q) : `<button class="add" data-p="${esc(i.id)}">담기</button>`}</div>`; }
+function renderItems(){ const L=filtered();
+  $('#items').innerHTML= L.length? L.slice(0,limit).map(itemHTML).join('') : '<div class="empty">찾는 상품이 없어요.</div>';
+  $('#more').classList.toggle('hidden',L.length<=limit); bindQty($('#items')); renderBar(); }
+$('#more').onclick=()=>{ limit+=60; renderItems(); };
+$('#q').addEventListener('input',()=>{ limit=60; renderItems(); });
+
+function setQty(id,q){ q=Math.max(0,Math.min(9999,Math.round(Number(q)||0))); if(q) cart[id]=q; else delete cart[id]; saveCart(); }
+function saveCart(){ LS.set('pm-ws-cart',JSON.stringify(cart)); }
+function bindQty(root){
+  root.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>{ setQty(b.dataset.p,(cart[b.dataset.p]||0)+1); rerender(); });
+  root.querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>{ setQty(b.dataset.m,(cart[b.dataset.m]||0)-1); rerender(); });
+  root.querySelectorAll('[data-q]').forEach(x=>{ x.onfocus=()=>x.select(); x.onchange=()=>{ setQty(x.dataset.q,x.value); rerender(); }; }); }
+function rerender(){ const y=window.scrollY; renderItems(); if(!$('#cart').classList.contains('hidden')) renderCart(); window.scrollTo(0,y); }
+
+const cartLines=()=>{ const byId=new Map(items.map(i=>[i.id,i])); return Object.entries(cart).map(([id,q])=>({i:byId.get(id),q})).filter(x=>x.i); };
+function renderBar(){ const L=cartLines(), n=L.length, t=L.reduce((s,x)=>s+x.q*x.i.price,0);
+  $('#bar').classList.toggle('hidden',!n || $('#tab-shop').classList.contains('hidden')); $('#barN').textContent=n; $('#barT').textContent=won(t); }
+function renderCart(){ const L=cartLines(), t=L.reduce((s,x)=>s+x.q*x.i.price,0);
+  $('#cartList').innerHTML= L.length? L.map(({i,q})=>`<div class="it"><div class="nm"><b>${esc(i.name)}${i.spec?` <span class="sub">${esc(i.spec)}</span>`:''}</b><div class="pr">${won(i.price)} × ${q} = ${won(i.price*q)}</div></div>${qtyHTML(i.id,q)}</div>`).join('') : '<div class="empty">장바구니가 비었어요.</div>';
+  $('#cartT').textContent=won(t); $('#send').disabled=!L.length; bindQty($('#cartList')); }
+$('#openCart').onclick=()=>{ renderCart(); $('#cart').classList.remove('hidden'); };
+$('#closeCart').onclick=()=>$('#cart').classList.add('hidden');
+$('#cart').onclick=e=>{ if(e.target.id==='cart') $('#cart').classList.add('hidden'); };
+
+$('#send').onclick=async()=>{ const L=cartLines(); if(!L.length) return; const b=$('#send'); b.disabled=true; b.textContent='보내는 중…';
+  try{ const r=await rpc('app_place_order',{p_token:token,p_lines:L.map(x=>({id:x.i.id,qty:x.q})),p_memo:$('#memo').value.trim()});
+    if(r.ok){ cart={}; saveCart(); $('#memo').value=''; $('#cart').classList.add('hidden'); toast('주문을 보냈어요 · Order sent ('+won(r.total)+')'); renderItems(); tab('orders'); }
+    else if(r.err==='soldout'){ toast(`'${r.name}' 품절이에요. 빼고 다시 보내 주세요.`); loadItems(); }
+    else if(r.err==='too_many'){ toast('주문이 너무 많아요. 잠시 뒤 다시 해 주세요.'); }
+    else if(r.err==='login'){ logout(); }
+    else toast('주문을 보내지 못했어요.'); }
+  catch(e){ toast('인터넷 연결을 확인해 주세요.'); }
+  b.disabled=false; b.textContent='주문 보내기 · Place order'; };
+
+const ST={new:['접수 대기','new'],imported:['접수 완료','imported'],canceled:['취소됨','canceled']};
+async function loadOrders(){ $('#orders').innerHTML='<div class="empty">불러오는 중…</div>';
+  try{ const r=await rpc('app_my_orders',{p_token:token}); if(!r.ok){ logout(); return; }
+    $('#balance').textContent=won(r.balance);
+    $('#orders').innerHTML= (r.orders||[]).length? r.orders.map(o=>{ const s=ST[o.status]||ST.new, d=new Date(o.created_at);
+      return `<div class="ord"><div class="top"><b>${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}</b><span class="st ${s[1]}">${s[0]}</span><b style="margin-left:auto">${won(o.total)}</b></div>
+        <ul>${(o.lines||[]).map(l=>`<li>${esc(l.name)}${l.spec?' '+esc(l.spec):''} × ${l.qty}</li>`).join('')}</ul>${o.memo?`<div class="sub" style="margin-top:6px">요청: ${esc(o.memo)}</div>`:''}
+        <div class="row" style="margin-top:8px"><button class="btn" data-again="${esc(o.id)}">다시 담기</button>${o.status==='new'?`<button class="btn" data-cancel="${esc(o.id)}" style="color:var(--danger)">주문 취소</button>`:''}</div></div>`; }).join('') : '<div class="empty">아직 주문이 없어요.</div>';
+    $('#orders').querySelectorAll('[data-cancel]').forEach(b=>b.onclick=async()=>{ if(b.dataset.sure!=='1'){ b.dataset.sure='1'; b.textContent='한 번 더 누르면 취소'; return; }
+      try{ const x=await rpc('app_cancel_order',{p_token:token,p_id:b.dataset.cancel}); toast(x.ok?'주문을 취소했어요':'이미 접수된 주문이라 취소할 수 없어요. 필마트에 연락해 주세요.'); }catch(e){ toast('인터넷 연결을 확인해 주세요.'); } loadOrders(); });
+    $('#orders').querySelectorAll('[data-again]').forEach(b=>b.onclick=()=>{ const o=r.orders.find(x=>x.id===b.dataset.again); const ok=new Set(items.filter(i=>!i.soldout).map(i=>i.id)); let n=0;
+      (o.lines||[]).forEach(l=>{ if(ok.has(l.id)){ cart[l.id]=(cart[l.id]||0)+l.qty; n++; } }); saveCart(); toast(n? `${n}개 상품을 담았어요` : '담을 수 있는 상품이 없어요'); tab('shop'); }); }
+  catch(e){ $('#orders').innerHTML='<div class="empty">불러오지 못했어요.</div>'; } }
+
+function tab(t){ document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.tab===t));
+  ['shop','orders','me'].forEach(x=>$('#tab-'+x).classList.toggle('hidden',x!==t)); if(t==='orders') loadOrders(); if(t==='shop') renderItems(); renderBar(); window.scrollTo(0,0); }
+document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>tab(b.dataset.tab));
+
+$('#pwForm').onsubmit=async e=>{ e.preventDefault(); $('#pwErr').textContent='';
+  try{ const r=await rpc('app_change_pw',{p_token:token,p_old:$('#pwOld').value,p_new:$('#pwNew').value});
+    if(r.ok){ toast('비밀번호를 바꿨어요'); $('#pwOld').value=''; $('#pwNew').value=''; } else $('#pwErr').textContent= r.err==='wrong_pw'? '지금 비밀번호가 맞지 않아요.' : r.err==='short'? '4자 이상으로 해 주세요.' : '바꾸지 못했어요.'; }
+  catch(err){ $('#pwErr').textContent='인터넷 연결을 확인해 주세요.'; } };
+async function logout(){ try{ if(token) await rpc('app_logout',{p_token:token}); }catch(e){} token=null; LS.del('pm-ws-token'); show('login'); }
+$('#logout').onclick=logout;
+document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible' && token && me && !$('#tab-shop').classList.contains('hidden')) loadItems(); });
+start();
+</script>
+</body>
+</html>
