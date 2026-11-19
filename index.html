@@ -84,7 +84,26 @@ label.f{display:block;font-size:13px;font-weight:600;color:var(--muted);margin:1
 .bal{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
 .bal b{font-size:20px}
 .toast{position:fixed;left:50%;bottom:96px;transform:translateX(-50%);background:#1d2a22;color:#fff;padding:10px 16px;border-radius:999px;font-size:14px;z-index:60;max-width:90vw;text-align:center}
-.empty{text-align:center;color:var(--muted);padding:30px 10px}
+.empty{text-align:center;color:var(--muted);padding:30px 10px;grid-column:1/-1}
+/* 쇼핑몰형 카드 */
+#items.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+@media (min-width:560px){#items.grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (min-width:860px){#items.grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.gc{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden;display:flex;flex-direction:column;position:relative}
+.gc.in-cart{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset}
+.gc .im{width:100%;aspect-ratio:1/1;object-fit:contain;background:#fff;display:block;border-bottom:1px solid var(--line)}
+.gc .noim{width:100%;aspect-ratio:1/1;background:linear-gradient(135deg,#eef3ec,#dfe9df);display:flex;align-items:center;justify-content:center;color:var(--accent);font-weight:800;font-size:22px;letter-spacing:.02em;border-bottom:1px solid var(--line);text-transform:uppercase}
+.gc .bd{padding:8px 10px 10px;display:flex;flex-direction:column;gap:6px;flex:1}
+.gc .nm{font-size:13.5px;font-weight:600;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:2.6em;word-break:break-word}
+.gc .nm .sub{font-weight:500}
+.gc .pr{font-weight:800;color:var(--accent);font-size:15px}
+.gc .act{margin-top:auto}
+.gc .add{width:100%;padding:9px 0}
+.gc .qty{width:100%;justify-content:space-between}
+.gc .qty button{flex:0 0 34px;width:34px}.gc .qty input{flex:1 1 auto;width:0;min-width:0}
+.gc .so{position:absolute;top:8px;left:8px;background:rgba(0,0,0,.65);color:#fff;font-size:12px;font-weight:700;padding:3px 8px;border-radius:999px}
+.gc.out .im,.gc.out .noim{filter:grayscale(1);opacity:.55}
+
 </style>
 </head>
 <body>
@@ -115,7 +134,7 @@ label.f{display:block;font-size:13px;font-weight:600;color:var(--muted);margin:1
 
     <div id="tab-shop">
       <div class="search"><input class="in" id="q" type="search" placeholder="상품 검색 · Search"><div class="chips" id="chips"></div></div>
-      <div class="list" id="items"></div>
+      <div class="list grid" id="items"></div>
       <button class="btn more hidden" id="more">더 보기 · More</button>
     </div>
 
@@ -196,10 +215,11 @@ const norm=s=>String(s||'').toLowerCase().replace(/\s+/g,' ').trim();
 function filtered(){ const tk=norm($('#q').value).split(' ').filter(Boolean);
   return items.filter(i=>(!cat||i.cat===cat) && tk.every(w=>norm(i.name+' '+(i.spec||'')).includes(w))); }
 function qtyHTML(id,q){ return `<div class="qty"><button data-m="${esc(id)}" aria-label="빼기">−</button><input type="number" inputmode="numeric" min="0" value="${q}" data-q="${esc(id)}" aria-label="수량"><button data-p="${esc(id)}" aria-label="더하기">+</button></div>`; }
-function itemHTML(i){ const q=cart[i.id]||0;
-  return `<div class="it${q?' in-cart':''}${i.soldout?' out':''}">${i.photo?`<img class="ph" src="${esc(i.photo)}" alt="" loading="lazy">`:''}
-    <div class="nm"><b>${esc(i.name)}${i.spec?` <span class="sub">${esc(i.spec)}</span>`:''}${i.soldout?'<span class="badge">품절 · Sold out</span>':''}</b><div class="pr">${won(i.price)}</div></div>
-    ${i.soldout? '' : q? qtyHTML(i.id,q) : `<button class="add" data-p="${esc(i.id)}">담기</button>`}</div>`; }
+function itemHTML(i){ const q=cart[i.id]||0; const ini=String(i.name||'').replace(/[^A-Za-z0-9가-힣 ]/g,'').split(' ').filter(Boolean).slice(0,2).map(w=>w[0]).join('');
+  return `<div class="gc${q?' in-cart':''}${i.soldout?' out':''}">${i.photo?`<img class="im" src="${esc(i.photo)}" alt="" loading="lazy" onerror="this.outerHTML='<div class=&quot;noim&quot;>${esc(ini)}</div>'">`:`<div class="noim">${esc(ini)}</div>`}
+    ${i.soldout?'<span class="so">품절 · Sold out</span>':''}
+    <div class="bd"><div class="nm">${esc(i.name)}${i.spec?` <span class="sub">${esc(i.spec)}</span>`:''}</div><div class="pr">${won(i.price)}</div>
+    <div class="act">${i.soldout? '' : q? qtyHTML(i.id,q) : `<button class="add" data-p="${esc(i.id)}">담기 · Add</button>`}</div></div></div>`; }
 function renderItems(){ const L=filtered();
   $('#items').innerHTML= L.length? L.slice(0,limit).map(itemHTML).join('') : '<div class="empty">찾는 상품이 없어요.</div>';
   $('#more').classList.toggle('hidden',L.length<=limit); bindQty($('#items')); renderBar(); }
