@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>카페24 연결 · 필마트</title>
+<style>
+body{font-family:system-ui,-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;background:#f3f5ef;margin:0;color:#1f2a1c}
+.w{max-width:520px;margin:40px auto;padding:0 16px}
+h1{font-size:20px;margin:0 0 6px}p{color:#5b6656;font-size:14px;line-height:1.5}
+.m{display:flex;align-items:center;justify-content:space-between;background:#fff;border:1px solid #dfe5d6;border-radius:12px;padding:14px 16px;margin:10px 0}
+.m b{font-size:15px}.m small{display:block;color:#7a8574;margin-top:2px}
+a.btn{background:#4a7a2c;color:#fff;text-decoration:none;padding:9px 16px;border-radius:9px;font-weight:700;font-size:14px}
+.msg{padding:14px 16px;border-radius:12px;margin:14px 0;font-weight:600}
+.ok{background:#e4f2d8;color:#2f5a17}.bad{background:#fbe3e0;color:#9a2b1d}
+</style></head><body><div class="w">
+<h1>카페24 쇼핑몰 연결</h1>
+<p>쇼핑몰마다 <b>연결하기</b>를 누르고, 그 쇼핑몰 관리자로 로그인해서 <b>허용</b>을 눌러 주세요. 끝나면 이 화면으로 돌아와요.</p>
+<div id="msg"></div><div id="list"></div>
+</div>
+<script>
+const FN='https://pebygdhmzxhoxooddcjz.supabase.co/functions/v1/cafe24-admin';
+const KEY='sb_publishable_NhUf1QKCMxH81wGqOf2AMg_0ATjywjK';
+const CID='GWWyQN7zCNfSTGqZfs8zHH';
+const RED=location.origin+location.pathname;
+const SCOPE='mall.read_product,mall.write_product,mall.read_category';
+const MALLS=[['hnlmall','Philippine Mart'],['muramart','Manila Mart'],['pmtraders','Save Mart']];
+const link=m=>`https://${m}.cafe24api.com/api/v2/oauth/authorize?response_type=code&client_id=${CID}&state=c24_${m}&redirect_uri=${encodeURIComponent(RED)}&scope=${SCOPE}`;
+document.getElementById('list').innerHTML=MALLS.map(([m,l])=>`<div class="m"><div><b>${l}</b><small>${m}</small></div><a class="btn" href="${link(m)}">연결하기</a></div>`).join('');
+const q=new URLSearchParams(location.search), code=q.get('code'), st=q.get('state')||'', err=q.get('error');
+const box=document.getElementById('msg'), say=(t,ok)=>box.innerHTML=`<div class="msg ${ok?'ok':'bad'}">${t}</div>`;
+if(err) say('연결이 취소됐거나 거절됐어요: '+(q.get('error_description')||err),false);
+if(code&&st.startsWith('c24_')){
+  const mall=st.slice(4), lab=(MALLS.find(x=>x[0]===mall)||[,mall])[1];
+  say(lab+' 연결하는 중…',true);
+  fetch(FN,{method:'POST',headers:{'Content-Type':'application/json',apikey:KEY,Authorization:'Bearer '+KEY},body:JSON.stringify({action:'exchange',mall,code,redirect_uri:RED})})
+   .then(r=>r.json()).then(j=>{ say(j.ok?`✅ ${lab} 연결 완료! 다른 쇼핑몰도 연결해 주세요.`:`❌ ${lab} 연결 실패: ${j.err||''}`, !!j.ok); history.replaceState(null,'',location.pathname); })
+   .catch(e=>say('❌ 오류: '+e,false));
+}
+</script></body></html>
