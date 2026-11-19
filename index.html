@@ -85,6 +85,18 @@ label.f{display:block;font-size:13px;font-weight:600;color:var(--muted);margin:1
 .bal b{font-size:20px}
 .toast{position:fixed;left:50%;bottom:96px;transform:translateX(-50%);background:#1d2a22;color:#fff;padding:10px 16px;border-radius:999px;font-size:14px;z-index:60;max-width:90vw;text-align:center}
 .empty{text-align:center;color:var(--muted);padding:30px 10px;grid-column:1/-1}
+
+/* 사진 확인 (관리자) */
+.phr{display:flex;gap:10px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:8px 10px;margin-bottom:6px}
+.phr img,.phr .ni{width:56px;height:56px;border-radius:8px;object-fit:contain;background:#fff;border:1px solid var(--line);flex:0 0 auto}
+.phr .ni{display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:11px}
+.phr .tx{flex:1;min-width:0;font-size:13.5px}.phr .tx b{display:block;word-break:break-word}
+.tag{display:inline-block;font-size:11px;font-weight:700;padding:1px 7px;border-radius:999px;margin-right:4px}
+.tag.ok{background:var(--accent-soft);color:var(--accent)}.tag.chk{background:#fff3d6;color:#9a6a00}.tag.no{background:#f6dede;color:var(--danger)}.tag.man{background:#e3e8f6;color:#3b4f8f}
+.pkg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.pkg button{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:6px;text-align:left;font-size:12px;cursor:pointer}
+.pkg img{width:100%;aspect-ratio:1/1;object-fit:contain;background:#fff;border-radius:6px;display:block;margin-bottom:4px}
+.pkg .pm{color:var(--warn);font-weight:700}
 /* 쇼핑몰형 카드 */
 #items.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
 @media (min-width:560px){#items.grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
@@ -130,6 +142,7 @@ label.f{display:block;font-size:13px;font-weight:600;color:var(--muted);margin:1
       <button class="on" data-tab="shop" role="tab">상품</button>
       <button data-tab="orders" role="tab">주문 내역</button>
       <button data-tab="me" role="tab">내 정보</button>
+      <button data-tab="ph" role="tab" class="hidden" id="tabPh">📷 사진</button>
     </div>
 
     <div id="tab-shop">
@@ -143,6 +156,12 @@ label.f{display:block;font-size:13px;font-weight:600;color:var(--muted);margin:1
       <div id="orders"></div>
     </div>
 
+    <div id="tab-ph" class="hidden">
+      <div class="card" style="margin-bottom:10px"><b>📷 상품 사진 연결 확인</b> <span class="sub">관리자만 보여요</span>
+        <div class="sub" style="margin-top:4px">카페24 상품 사진을 이름으로 자동 연결했어요. <b>확인 필요</b>는 이름이 비슷해서 붙인 것이에요. 틀린 건 <b>바꾸기</b>로 고르면 그 뒤로는 자동으로 바뀌지 않아요.</div></div>
+      <div class="chips" id="phf"></div>
+      <div id="phlist"></div>
+    </div>
     <div id="tab-me" class="hidden">
       <div class="card" id="meInfo"></div>
       <form class="card" id="pwForm" style="margin-top:10px">
@@ -166,6 +185,15 @@ label.f{display:block;font-size:13px;font-weight:600;color:var(--muted);margin:1
     <div class="ft"><div class="sum"><span>합계 · Total</span><span id="cartT">0원</span></div>
       <div class="sub" style="margin:-4px 0 10px">가격은 주문 시점 기준이며, 재고에 따라 수량이 조정될 수 있어요.</div>
       <button class="btn pri big" id="send">주문 보내기 · Place order</button></div>
+  </div>
+</div>
+
+<div class="sheet hidden" id="pick">
+  <div class="box">
+    <div class="hd"><span id="pickT">사진 고르기</span><button id="closePick" aria-label="닫기">✕</button></div>
+    <div class="bd"><input class="in" id="pickQ" type="search" placeholder="카페24 상품 검색">
+      <div class="row" style="margin:8px 0"><button class="btn" id="pickNone">사진 없음으로 두기</button></div>
+      <div id="pickList" class="pkg"></div></div>
   </div>
 </div>
 
@@ -195,7 +223,7 @@ async function start(){
   if(!token){ show('login'); return; }
   try{ const m=await rpc('app_me',{p_token:token}); if(!m.ok){ token=null; LS.del('pm-ws-token'); show('login'); return; } me=m; }
   catch(e){ show('login'); $('#lgErr').textContent='인터넷 연결을 확인해 주세요.'; return; }
-  show('app'); $('#who').innerHTML=`${esc(me.name)}<br>${esc(me.cls)} 단가`;
+  show('app'); $('#tabPh').classList.toggle('hidden',!me.admin); $('#who').innerHTML=`${esc(me.name)}<br>${esc(me.cls)} 단가`;
   $('#meInfo').innerHTML=`<b style="font-size:17px">${esc(me.name)}</b><div class="sub" style="margin-top:6px">${esc(me.phone||'')}${me.address?'<br>'+esc(me.address):''}</div><div class="sub" style="margin-top:6px">${esc(me.cls)} class 도매가 적용</div>`;
   await loadItems(); }
 
@@ -269,7 +297,7 @@ async function loadOrders(){ $('#orders').innerHTML='<div class="empty">불러�
   catch(e){ $('#orders').innerHTML='<div class="empty">불러오지 못했어요.</div>'; } }
 
 function tab(t){ document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.tab===t));
-  ['shop','orders','me'].forEach(x=>$('#tab-'+x).classList.toggle('hidden',x!==t)); if(t==='orders') loadOrders(); if(t==='shop') renderItems(); renderBar(); window.scrollTo(0,0); }
+  ['shop','orders','me','ph'].forEach(x=>$('#tab-'+x).classList.toggle('hidden',x!==t)); if(t==='orders') loadOrders(); if(t==='ph') loadPh(); if(t==='shop') renderItems(); renderBar(); window.scrollTo(0,0); }
 document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>tab(b.dataset.tab));
 
 $('#pwForm').onsubmit=async e=>{ e.preventDefault(); $('#pwErr').textContent='';
@@ -279,6 +307,34 @@ $('#pwForm').onsubmit=async e=>{ e.preventDefault(); $('#pwErr').textContent='';
 async function logout(){ try{ if(token) await rpc('app_logout',{p_token:token}); }catch(e){} token=null; LS.del('pm-ws-token'); show('login'); }
 $('#logout').onclick=logout;
 document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible' && token && me && !$('#tab-shop').classList.contains('hidden')) loadItems(); });
+/* ---- 관리자: 사진 연결 확인 ---- */
+const HOW={exact:['연결됨','ok'],contain:['연결됨','ok'],core:['확인 필요','chk'],similar:['확인 필요','chk'],none:['사진 없음','no'],manual:['직접 지정','man']};
+let ph=[], phF='chk', pickItem=null;
+async function loadPh(){ $('#phlist').innerHTML='<div class="empty">불러오는 중…</div>';
+  try{ const r=await rpc('app_admin_photos',{p_token:token}); if(!r.ok){ $('#phlist').innerHTML='<div class="empty">관리자만 볼 수 있어요.</div>'; return; } ph=r.items||[]; }catch(e){ $('#phlist').innerHTML='<div class="empty">불러오지 못했어요.</div>'; return; }
+  renderPh(); }
+function phKind(i){ return i.manual? 'man' : (HOW[i.how]||HOW.none)[1]; }
+function renderPh(){ const F=[['chk','확인 필요'],['no','사진 없음'],['man','직접 지정'],['ok','연결됨'],['','전체']];
+  const cnt=k=>k? ph.filter(i=>phKind(i)===k).length : ph.length;
+  $('#phf').innerHTML=F.map(([k,l])=>`<button class="chip${k===phF?' on':''}" data-k="${k}">${l} ${cnt(k)}</button>`).join('');
+  $('#phf').querySelectorAll('.chip').forEach(b=>b.onclick=()=>{ phF=b.dataset.k; renderPh(); });
+  const L=ph.filter(i=>!phF||phKind(i)===phF);
+  $('#phlist').innerHTML= L.length? L.map(i=>{ const h=i.manual? HOW.manual : (HOW[i.how]||HOW.none);
+    return `<div class="phr">${i.photo?`<img src="${esc(i.photo)}" alt="" loading="lazy">`:'<div class="ni">사진 없음</div>'}<div class="tx"><b>${esc(i.name)}${i.spec?' '+esc(i.spec):''}</b><span class="tag ${h[1]}">${h[0]}</span><span class="sub">${i.c24?'카페24: '+esc(i.c24):''}</span></div><button class="btn" data-pick="${esc(i.id)}">바꾸기</button></div>`; }).join('') : '<div class="empty">해당하는 상품이 없어요.</div>';
+  $('#phlist').querySelectorAll('[data-pick]').forEach(b=>b.onclick=()=>openPick(ph.find(x=>x.id===b.dataset.pick))); }
+let pT=null;
+function openPick(i){ pickItem=i; $('#pickT').textContent=i.name; $('#pickQ').value=i.name.replace(/\(.*?\)/g,'').split(' ').slice(0,3).join(' '); $('#pick').classList.remove('hidden'); searchPick(); }
+async function searchPick(){ $('#pickList').innerHTML='<div class="empty">찾는 중…</div>';
+  try{ const r=await rpc('app_admin_c24',{p_token:token,p_q:$('#pickQ').value}); const L=r.list||[];
+    $('#pickList').innerHTML= L.length? L.map(x=>`<button data-no="${x.no}"><img src="${esc(x.img)}" alt="" loading="lazy">${x.promo?'<span class="pm">[행사] </span>':''}${esc(x.name)}</button>`).join('') : '<div class="empty">카페24에서 찾지 못했어요.</div>';
+    $('#pickList').querySelectorAll('[data-no]').forEach(b=>b.onclick=()=>setPh(+b.dataset.no)); }catch(e){ $('#pickList').innerHTML='<div class="empty">불러오지 못했어요.</div>'; } }
+async function setPh(no){ try{ const r=await rpc('app_admin_set_photo',{p_token:token,p_item:pickItem.id,p_no:no}); if(!r.ok){ toast('바꾸지 못했어요'); return; }
+    Object.assign(pickItem,{photo:r.photo||null,manual:true,how:'manual'}); const it=items.find(x=>x.id===pickItem.id); if(it) it.photo=r.photo||null;
+    $('#pick').classList.add('hidden'); toast(no? '사진을 바꿨어요' : '사진 없음으로 두었어요'); renderPh(); }catch(e){ toast('인터넷 연결을 확인해 주세요.'); } }
+$('#pickQ').addEventListener('input',()=>{ clearTimeout(pT); pT=setTimeout(searchPick,300); });
+$('#pickNone').onclick=()=>setPh(null);
+$('#closePick').onclick=()=>$('#pick').classList.add('hidden');
+$('#pick').onclick=e=>{ if(e.target.id==='pick') $('#pick').classList.add('hidden'); };
 start();
 </script>
 </body>
